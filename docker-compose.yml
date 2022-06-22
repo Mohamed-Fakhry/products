@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=pass12345
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - e2e-app-network
+    ports:
+      - 27017:27017
+    restart: unless-stopped
+
+  backend:
+    build: .
+    container_name: backend
+    depends_on:
+      - mongodb
+    environment:
+      MONGODB_URI: mongodb://root:pass12345@mongodb:27017/products?authSource=admin
+      NODE_ENV: production
+    ports:
+      - 3000:3000
+    networks:
+      - e2e-app-network
+
+  frontend:
+    build: ./frontend
+    networks:
+      - e2e-app-network
+    ports:
+      - 8080:80
+volumes:
+  mongodb-data:
+    name: mongodb-data
+
+networks:
+  e2e-app-network:
+    driver: bridge
